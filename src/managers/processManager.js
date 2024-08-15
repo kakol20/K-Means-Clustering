@@ -5,12 +5,14 @@ const ProcessManager = (function () {
 
 	const debugStates = true;
 
-	let pointsCount = 500;
+	const pointsCount = 10000;
 	let points = [];
 
 	let centers = [];
 
 	let step = 0;
+	let previousStep = 0;
+	let stepName = 'empty'
 
 	function DrawAll() {
 		background(28);
@@ -21,51 +23,25 @@ const ProcessManager = (function () {
 		for (let i = 0; i < points.length; i++) {
 			points[i].draw(centers[points[i].centerIndex].pointsCol);
 		}
+
+		// draw text
+		let displayText = 'Step: ' + stepName;
+		displayText += '\nCenters: ' + centers.length;
+
+		stroke('black');
+		strokeWeight(1);
+		rectMode(CORNERS);
+		textAlign(LEFT, TOP);
+		fill('white');
+		textSize(15);
+		textFont('Helvetica');
+		text(displayText, 5, 5);
 	}
 
-	function Step0() {
-		// place first center
-		let avgPos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
-
-		centers.push(new Center(avgPos, color('white')));
-		centers[0].setHue(0);
-		
-		for (let i = 0; i < points.length; i++) {
-			let diff = p5.Vector.sub(centers[0].pos, points[i].pos);
-			points[i].centerIndex = 0;
-			points[i].sqDistToCenter = diff.magSq();
-
-			if (i === 0) {
-				points[i].randomWeight = points[i].sqDistToCenter;
-			} else {
-				points[i].randomWeight = points[i].sqDistToCenter + points[i - 1].randomWeight;
-			}
-		}
-
-		console.log('Centers', centers);
-
-		DrawAll();
-
-		DOMManager.nextStepButton.removeAttribute('disabled');
-		step = 1;
-	}
-
-	function Step1() {
-		// random choose next center
-		const randChoice = Random.randFloatValue(0, points[points.length - 1].randomWeight);
-
-		let i = 0;
-		while (i < points.length) {
-			if (randChoice < points[i].randomWeight) break;
-			i++;
-		}
-		console.log('Chosen Points Index', i);
-
-		centers.push(new Center(points[i].pos));
-		
+	function ReassignPoints() {
 		// set colors
 		for (let j = 0; j < centers.length; j++) {
-			centers[j].setHue((j / centers.length) * 360);
+			centers[j].setHue(MathCustom.UnsignedMod((j / centers.length) * 360, 360));
 		}
 
 		// re-assign points
@@ -93,19 +69,87 @@ const ProcessManager = (function () {
 			}
 		}
 
-		DrawAll();
+	}
 
+	function FirstCenter() {
+		stepName = 'First Center';
+
+		// place first center
+		let avgPos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
+
+		centers.push(new Center(avgPos, color('white')));
+		
+		ReassignPoints();
+		DrawAll();
 		DOMManager.nextStepButton.removeAttribute('disabled');
+		previousStep = 0;
+		step = 1;
+
+		console.log('Centers', centers);
+	}
+
+	function NewCenter() {
+		stepName = 'New Center';
+		// random choose next center
+		const randChoice = Random.randFloatValue(0, points[points.length - 1].randomWeight);
+
+		let i = 0;
+		while (i < points.length) {
+			if (randChoice < points[i].randomWeight) break;
+			i++;
+		}
+		console.log('Chosen Points Index', i);
+
+		centers.push(new Center(points[i].pos));
+
+		ReassignPoints();
+		DrawAll();
+		DOMManager.nextStepButton.removeAttribute('disabled');
+		previousStep = 1;
 		step = 2;
 	}
 
-	function Step2() {
+	function MoveCenters() {
+		stepName = 'Move Centers';
 		// move centers
+		let average = [];
+		for (let i = 0; i < centers.length; i++) {
+			average.push({
+				count: 0,
+				pos: createVector(0, 0)
+			});
+		}
+
+		for (let i = 0; i < points.length; i++) {
+			const avgI = points[i].centerIndex;
+			average[avgI].pos.add(points[i].pos);
+			average[avgI].count += 1;
+		}
+
+		for (let i = 0; i < centers.length; i++) {
+			average[i].pos.div(average[i].count);
+			centers[i].setPos(average[i].pos);
+		}
+
+		ReassignPoints();
+		DrawAll();
+		DOMManager.nextStepButton.removeAttribute('disabled');
+		if (previousStep === 1) {
+			previousStep = 2;
+			step = 1;
+		} else {
+			previousStep = 2;
+			step = 3;
+		}
 	}
 
 	return {
 		debugPoints() {
 			console.log('Points', points);
+		},
+
+		debugCenters() {
+			console.log('Centers', centers);
 		},
 
 		changeState(s) {
@@ -132,10 +176,13 @@ const ProcessManager = (function () {
 
 			switch (step) {
 				case 0:
-					Step0();
+					FirstCenter(); // first center
 					break;
 				case 1:
-					Step1();
+					NewCenter(); // add new center
+					break;
+				case 2:
+					MoveCenters(); // move centers
 					break;
 				default:
 					break;

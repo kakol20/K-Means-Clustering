@@ -6,8 +6,12 @@ class Center {
   }
 
   setHue(h = 0) {
-    this.col = color('hsl(' + h.toString() + ', 100%, 50%)');
+    this.col = color('hsl(' + (Math.floor(h)).toString() + ', 100%, 50%)');
     this.pointsCol = color(red(this.col), green(this.col), blue(this.col), 128);
+  }
+
+  setPos(pos) {
+    this.pos = pos.copy();
   }
 
   draw() {
