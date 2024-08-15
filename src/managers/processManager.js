@@ -20,6 +20,7 @@ const ProcessManager = (function () {
 			switch (state) {
 				default:
 					// do nothing
+					background(28);
 					break;
 			}
 		}
