@@ -5,7 +5,7 @@ const ProcessManager = (function () {
 
 	const debugStates = true;
 
-	const pointsCount = 10000;
+	const pointsCount = 5000;
 	let points = [];
 
 	let centers = [];
@@ -78,7 +78,9 @@ const ProcessManager = (function () {
 		stepName = 'First Center';
 
 		// place first center
-		let avgPos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
+		// let avgPos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
+		const avgIndex = Random.randIntValue(0, points.length - 1);
+		let avgPos = points[avgIndex].pos.copy();
 
 		centers.push(new Center(avgPos, color('white')));
 
@@ -138,6 +140,23 @@ const ProcessManager = (function () {
 		step = 1;
 	}
 
+	function ToroidalDistance(a, b, min, max) {
+		let delta = createVector(
+			Math.abs(b.x - a.x),
+			Math.abs(b.y - a.y)
+		);
+		let minMaxDelta = createVector(
+			Math.abs(max.x - min.x),
+			Math.abs(max.y - min.y)
+		);
+		let mid = p5.Vector.div(minMaxDelta, 2);
+
+		if (delta.x > mid.x) delta.x = minMaxDelta.x - delta.x;
+		if (delta.y > mid.y) delta.y = minMaxDelta.y - delta.y;
+
+		return Math.abs(delta.magSq());
+	}
+
 	return {
 		debugPoints() {
 			console.log('Points', points);
@@ -155,13 +174,63 @@ const ProcessManager = (function () {
 
 		setup() {
 			Random.seed = (new Date() * 1) >>> 0;
+			points.length = 0;
+			centers.length = 0;
+
+			let clusterCenters = [];
+			const radius = 125;
+			const maxClusters = 6;
+			const m = 2;
+
+			// blue noise
+			for (let i = 0; i < maxClusters; i++) {
+				let candidateCount = clusterCenters.length * m + 1;
+
+				let furthestPoint = createVector(0, 0);
+				let furthestDist = -1;
+				for (let j = 0; j < candidateCount; j++) {
+					let currentPoint = createVector(
+						Random.randFloatValue(radius, width - radius),
+						Random.randFloatValue(radius, height - radius)
+					);
+					let closestDist = (width * width + height * height) * 2;
+
+					for (let k = 0; k < clusterCenters.length; k++) {
+						const currentDist = ToroidalDistance(
+							currentPoint, 
+							clusterCenters[k], 
+							createVector(0, 0),
+							createVector(width, height)
+						);
+
+						if (currentDist < closestDist) closestDist = currentDist;
+					}
+
+					if (closestDist > furthestDist) {
+						furthestPoint = currentPoint.copy();
+						furthestDist = closestDist;
+					}
+				}
+
+				clusterCenters.push(furthestPoint.copy());
+			}
 
 			background(28);
 
 			for (let i = 0; i < pointsCount; i++) {
-				points.push(new Points());
+				const chosenIndex = Random.randIntValue(0, clusterCenters.length - 1);
+				const randRadius = Math.sqrt(Random.randFloat()) * radius;
+				const randAngle = Random.randFloat() * MathCustom.TAU;
+
+				let pos = createVector(
+					(randRadius * Math.cos(randAngle)),
+					randRadius * Math.sin(randAngle)
+				);
+				pos.add(clusterCenters[chosenIndex]);
+				points.push(new Points(pos));
 				points[i].draw();
 			}
+
 
 			console.log('Sample Point', points[0]);
 		},

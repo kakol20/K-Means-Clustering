@@ -1,6 +1,6 @@
 class Points {
-  constructor() {
-		this.pos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
+  constructor(pos = createVector(0, 0)) {
+		this.pos = pos.copy();
 		this.centerIndex = 0;
 		this.sqDistToCenter = 0;
 		this.randomWeight = 0;
