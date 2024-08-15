@@ -17,15 +17,23 @@ const ProcessManager = (function () {
 	function DrawAll() {
 		DOMManager.newCenterButton.removeAttribute('disabled');
 		DOMManager.clusterButton.removeAttribute('disabled');
+		DOMManager.fullMoveButton.removeAttribute('disabled');
+		DOMManager.restartButton.removeAttribute('disabled');
 
 		background(28);
 
-		for (let i = 0; i < points.length; i++) {
-			points[i].draw(centers[points[i].centerIndex].pointsCol);
-		}
-
-		for (let i = 0; i < centers.length; i++) {
-			centers[i].draw();
+		if (centers.length > 0) {
+			for (let i = 0; i < points.length; i++) {
+				points[i].draw(centers[points[i].centerIndex].pointsCol);
+			}
+	
+			for (let i = 0; i < centers.length; i++) {
+				centers[i].draw();
+			}
+		} else {
+			for (let i = 0; i < points.length; i++) {
+				points[i].draw(color(255, 255, 255, 64));
+			}
 		}
 
 		// draw text
@@ -43,6 +51,9 @@ const ProcessManager = (function () {
 	}
 
 	function ReassignPoints() {
+		// points.sort((a, b) => b.dist - a.dist);
+
+		let changed = false;
 		// set colors
 		for (let i = 0; i < centers.length; i++) {
 			centers[i].setHue(MathCustom.UnsignedMod((i / centers.length) * 360, 360));
@@ -62,16 +73,25 @@ const ProcessManager = (function () {
 					minDist = dist;
 				}
 			}
+			if (points[i].centerIndex != chosenCenter) changed = true;
 
 			points[i].centerIndex = chosenCenter;
-			points[i].sqDistToCenter = minDist;
+			points[i].dist = minDist;
+		}
 
+		points.sort((a, b) => {
+			return b.dist - a.dist || b.centerIndex - a.centerIndex;
+		});
+
+		for (let i = 0; i < points.length; i++) {
 			if (i === 0) {
-				points[i].randomWeight = points[i].sqDistToCenter * points[i].sqDistToCenter;
+				points[i].randomWeight = points[i].dist * points[i].dist;
 			} else {
-				points[i].randomWeight = (points[i].sqDistToCenter * points[i].sqDistToCenter) + points[i - 1].randomWeight;
+				points[i].randomWeight = (points[i].dist * points[i].dist) + points[i - 1].randomWeight;
 			}
 		}
+
+		return changed;
 	}
 
 	function FirstCenter() {
@@ -95,8 +115,8 @@ const ProcessManager = (function () {
 	function NewCenter() {
 		stepName = 'New Center';
 		// random choose next center
-		const randChoice = Random.randFloatValue(0, points[points.length - 1].randomWeight);
-		// const randChoice = 0;
+		// const randChoice = Random.randFloatValue(0, points[points.length - 1].randomWeight);
+		const randChoice = 0;
 
 		let i = 0;
 		while (i < points.length) {
@@ -140,6 +160,39 @@ const ProcessManager = (function () {
 		step = 1;
 	}
 
+	function FullMove() {
+		stepName = 'Full Move';
+
+		let changed = true;
+		while (changed) {
+			changed = false;
+
+			let average = [];
+			for (let i = 0; i < centers.length; i++) {
+				average.push({
+					count: 0,
+					pos: createVector(0, 0)
+				});
+			}
+
+			for (let i = 0; i < points.length; i++) {
+				const avgI = points[i].centerIndex;
+				average[avgI].pos.add(points[i].pos);
+				average[avgI].count += 1;
+			}
+
+			for (let i = 0; i < centers.length; i++) {
+				average[i].pos.div(average[i].count);
+				centers[i].setPos(average[i].pos);
+			}
+
+			changed = ReassignPoints();
+		}
+
+		DrawAll();
+		step = 1;
+	}
+
 	function ToroidalDistance(a, b, min, max) {
 		let delta = createVector(
 			Math.abs(b.x - a.x),
@@ -173,13 +226,14 @@ const ProcessManager = (function () {
 		},
 
 		setup() {
-			Random.seed = (new Date() * 1) >>> 0;
 			points.length = 0;
 			centers.length = 0;
 
+			step = 1;
+
 			let clusterCenters = [];
 			const maxClusters = 6;
-			const radius = width / (maxClusters * 1.5);
+			const radius = width / (maxClusters);
 			const m = 2;
 
 			// blue noise
@@ -197,8 +251,8 @@ const ProcessManager = (function () {
 
 					for (let k = 0; k < clusterCenters.length; k++) {
 						const currentDist = ToroidalDistance(
-							currentPoint, 
-							clusterCenters[k], 
+							currentPoint,
+							clusterCenters[k],
 							createVector(0, 0),
 							createVector(width, height)
 						);
@@ -215,7 +269,7 @@ const ProcessManager = (function () {
 				clusterCenters.push(furthestPoint.copy());
 			}
 
-			background(28);
+			// background(28);
 
 			for (let i = 0; i < pointsCount; i++) {
 				const chosenIndex = Random.randIntValue(0, clusterCenters.length - 1);
@@ -228,15 +282,19 @@ const ProcessManager = (function () {
 				);
 				pos.add(clusterCenters[chosenIndex]);
 				points.push(new Points(pos));
-				points[i].draw();
+				// points[i].draw();
 			}
 
+			stepName = 'Setup';
+			DrawAll();
 
 			console.log('Sample Point', points[0]);
 		},
 
 		nextStep() {
 			console.log('Step', step);
+
+			if (centers.length === 0) step = 0;
 
 			switch (step) {
 				case 0:
@@ -248,6 +306,9 @@ const ProcessManager = (function () {
 				case 2:
 					MoveCenters(); // move centers
 					break;
+				case 3:
+					FullMove();
+					break;
 				default:
 					break;
 			}
@@ -255,6 +316,10 @@ const ProcessManager = (function () {
 
 		moveCenters() {
 			step = 2;
+			this.nextStep();
+		},
+		fullMove() {
+			step = 3;
 			this.nextStep();
 		},
 
