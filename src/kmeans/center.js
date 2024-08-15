@@ -1,8 +1,13 @@
 class Center {
-  constructor(pos = createVector(), col = color()) {
+  constructor(pos = createVector(), col = color('white')) {
     this.pos = pos.copy();
     this.col = col;
-    this.pointsCol = color(red(col), green(col), blue(col), 128)
+    this.pointsCol = color(red(col), green(col), blue(col), 128);
+  }
+
+  setHue(h = 0) {
+    this.col = color('hsl(' + h.toString() + ', 100%, 50%)');
+    this.pointsCol = color(red(this.col), green(this.col), blue(this.col), 128);
   }
 
   draw() {

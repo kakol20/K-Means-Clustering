@@ -24,39 +24,90 @@ const ProcessManager = (function () {
 	}
 
 	function Step0() {
-		const centerCol = color('hsl(0, 100%, 50%)');
-
 		// place first center
 		let avgPos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
 
-		centers.push(new Center(avgPos, centerCol));
+		centers.push(new Center(avgPos, color('white')));
+		centers[0].setHue(0);
 		
 		for (let i = 0; i < points.length; i++) {
 			let diff = p5.Vector.sub(centers[0].pos, points[i].pos);
 			points[i].centerIndex = 0;
-			points[i].distToCenter = diff.magSq();
+			points[i].sqDistToCenter = diff.magSq();
 
 			if (i === 0) {
-				points[i].randomWeight = points[i].distToCenter;
+				points[i].randomWeight = points[i].sqDistToCenter;
 			} else {
-				points[i].randomWeight = points[i].distToCenter + points[i - 1].randomWeight;
+				points[i].randomWeight = points[i].sqDistToCenter + points[i - 1].randomWeight;
 			}
 		}
 
 		console.log('Centers', centers);
 
-		DOMManager.nextStepButton.removeAttribute('disabled');
-
 		DrawAll();
 
+		DOMManager.nextStepButton.removeAttribute('disabled');
 		step = 1;
 	}
 
 	function Step1() {
 		// random choose next center
+		const randChoice = Random.randFloatValue(0, points[points.length - 1].randomWeight);
+
+		let i = 0;
+		while (i < points.length) {
+			if (randChoice < points[i].randomWeight) break;
+			i++;
+		}
+		console.log('Chosen Points Index', i);
+
+		centers.push(new Center(points[i].pos));
+		
+		// set colors
+		for (let j = 0; j < centers.length; j++) {
+			centers[j].setHue((j / centers.length) * 360);
+		}
+
+		// re-assign points
+		for (let j = 0; j < points.length; j++) {
+			let chosenCenter = 0;
+			let minDist = width * height * 2;
+
+			for (let k = 0; k < centers.length; k++) {
+				const diff = p5.Vector.sub(centers[k].pos, points[j].pos);
+				const dist = diff.magSq();
+
+				if (dist < minDist) {
+					chosenCenter = k;
+					minDist = dist;
+				}
+			}
+
+			points[j].centerIndex = chosenCenter;
+			points[j].sqDistToCenter = minDist;
+
+			if (j === 0) {
+				points[j].randomWeight = points[j].sqDistToCenter;
+			} else {
+				points[j].randomWeight = points[j].sqDistToCenter + points[j - 1].randomWeight;
+			}
+		}
+
+		DrawAll();
+
+		DOMManager.nextStepButton.removeAttribute('disabled');
+		step = 2;
+	}
+
+	function Step2() {
+		// move centers
 	}
 
 	return {
+		debugPoints() {
+			console.log('Points', points);
+		},
+
 		changeState(s) {
 			state = s;
 

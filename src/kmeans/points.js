@@ -2,7 +2,7 @@ class Points {
   constructor() {
 		this.pos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
 		this.centerIndex = 0;
-		this.distToCenter = 0;
+		this.sqDistToCenter = 0;
 		this.randomWeight = 0;
 	}
 
@@ -11,8 +11,7 @@ class Points {
 		// stroke(col);
 		// point(this.pos);
 
-		strokeWeight(1);
-    stroke(20);
+		noStroke();
     fill(col);
     circle(this.pos.x, this.pos.y, 5);
 	}
