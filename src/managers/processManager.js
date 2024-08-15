@@ -5,7 +5,7 @@ const ProcessManager = (function () {
 
 	const debugStates = true;
 
-	const pointsCount = 10000;
+	const pointsCount = 1000;
 	let points = [];
 
 	let centers = [];
@@ -15,6 +15,9 @@ const ProcessManager = (function () {
 	let stepName = 'empty'
 
 	function DrawAll() {
+		DOMManager.newCenterButton.removeAttribute('disabled');
+		DOMManager.clusterButton.removeAttribute('disabled');
+
 		background(28);
 		for (let i = 0; i < centers.length; i++) {
 			centers[i].draw();
@@ -78,10 +81,10 @@ const ProcessManager = (function () {
 		let avgPos = createVector(Random.randFloatValue(0, width), Random.randFloatValue(0, height));
 
 		centers.push(new Center(avgPos, color('white')));
-		
+
 		ReassignPoints();
 		DrawAll();
-		DOMManager.nextStepButton.removeAttribute('disabled');
+		DOMManager.newCenterButton.removeAttribute('disabled');
 		previousStep = 0;
 		step = 1;
 
@@ -104,7 +107,7 @@ const ProcessManager = (function () {
 
 		ReassignPoints();
 		DrawAll();
-		DOMManager.nextStepButton.removeAttribute('disabled');
+		DOMManager.newCenterButton.removeAttribute('disabled');
 		previousStep = 1;
 		step = 2;
 	}
@@ -133,14 +136,8 @@ const ProcessManager = (function () {
 
 		ReassignPoints();
 		DrawAll();
-		DOMManager.nextStepButton.removeAttribute('disabled');
-		if (previousStep === 1) {
-			previousStep = 2;
-			step = 1;
-		} else {
-			previousStep = 2;
-			step = 3;
-		}
+		previousStep = 2;
+		step = 1;
 	}
 
 	return {
@@ -187,6 +184,12 @@ const ProcessManager = (function () {
 				default:
 					break;
 			}
+		},
+
+		moveCenters() {
+			previousStep = 3;
+			step = 2;
+			this.nextStep();
 		},
 
 		draw(dt) {
