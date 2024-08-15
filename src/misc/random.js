@@ -27,9 +27,9 @@ const Random = (function () {
 		},
 
     randIntValue(minV, maxV) {
-      const diff = maxV - minV;
+      const diff = (maxV - minV) + 1;
 
-      const randV = this.randInt;
+      const randV = this.randInt();
 
       return UnsignedMod(randV, diff) + minV;
     },

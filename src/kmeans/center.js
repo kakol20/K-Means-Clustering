@@ -16,7 +16,7 @@ class Center {
 
   draw() {
     strokeWeight(1);
-    stroke('white');
+    stroke('black');
     fill(this.col);
     circle(this.pos.x, this.pos.y, 10);
   }
