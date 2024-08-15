@@ -2,7 +2,7 @@ class Points {
   constructor(pos = createVector(0, 0)) {
 		this.pos = pos.copy();
 		this.centerIndex = 0;
-		this.sqDistToCenter = 0;
+		this.dist = 0;
 		this.randomWeight = 0;
 	}
 

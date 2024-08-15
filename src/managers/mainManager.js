@@ -3,6 +3,8 @@ const MainManager = (function () {
 		canvas: 0,
 
 		preload() {
+			Random.seed = (new Date() * 1) >>> 0;
+
 			DOMManager.preload();
 		},
 
