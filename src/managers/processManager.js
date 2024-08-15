@@ -5,7 +5,7 @@ const ProcessManager = (function () {
 
 	const debugStates = true;
 
-	const pointsCount = 1000;
+	const pointsCount = 10000;
 	let points = [];
 
 	let centers = [];
