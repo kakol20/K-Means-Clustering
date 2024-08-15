@@ -19,12 +19,13 @@ const ProcessManager = (function () {
 		DOMManager.clusterButton.removeAttribute('disabled');
 
 		background(28);
-		for (let i = 0; i < centers.length; i++) {
-			centers[i].draw();
-		}
 
 		for (let i = 0; i < points.length; i++) {
 			points[i].draw(centers[points[i].centerIndex].pointsCol);
+		}
+
+		for (let i = 0; i < centers.length; i++) {
+			centers[i].draw();
 		}
 
 		// draw text
