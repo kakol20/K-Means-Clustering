@@ -178,8 +178,8 @@ const ProcessManager = (function () {
 			centers.length = 0;
 
 			let clusterCenters = [];
-			const radius = 125;
 			const maxClusters = 6;
+			const radius = width / (maxClusters * 1.5);
 			const m = 2;
 
 			// blue noise
