@@ -11,7 +11,7 @@ const DOMManager = (function () {
 				ProcessManager.nextStep();
 			});
 
-			this.clusterButton = createButton('Cluster');
+			this.clusterButton = createButton('Move Centers');
 			this.clusterButton.mousePressed(() => {
 				this.clusterButton.attribute('disabled', true);
 				this.newCenterButton.attribute('disabled', true);

@@ -11,7 +11,7 @@ const ProcessManager = (function () {
 	let centers = [];
 
 	let step = 0;
-	let previousStep = 0;
+	// let previousStep = 0;
 	let stepName = 'empty'
 
 	function DrawAll() {
@@ -44,35 +44,34 @@ const ProcessManager = (function () {
 
 	function ReassignPoints() {
 		// set colors
-		for (let j = 0; j < centers.length; j++) {
-			centers[j].setHue(MathCustom.UnsignedMod((j / centers.length) * 360, 360));
+		for (let i = 0; i < centers.length; i++) {
+			centers[i].setHue(MathCustom.UnsignedMod((i / centers.length) * 360, 360));
 		}
 
 		// re-assign points
-		for (let j = 0; j < points.length; j++) {
+		for (let i = 0; i < points.length; i++) {
 			let chosenCenter = 0;
 			let minDist = width * height * 2;
 
-			for (let k = 0; k < centers.length; k++) {
-				const diff = p5.Vector.sub(centers[k].pos, points[j].pos);
-				const dist = diff.magSq();
+			for (let j = 0; j < centers.length; j++) {
+				const diff = p5.Vector.sub(centers[j].pos, points[i].pos);
+				const dist = diff.mag();
 
 				if (dist < minDist) {
-					chosenCenter = k;
+					chosenCenter = j;
 					minDist = dist;
 				}
 			}
 
-			points[j].centerIndex = chosenCenter;
-			points[j].sqDistToCenter = minDist;
+			points[i].centerIndex = chosenCenter;
+			points[i].sqDistToCenter = minDist;
 
-			if (j === 0) {
-				points[j].randomWeight = points[j].sqDistToCenter;
+			if (i === 0) {
+				points[i].randomWeight = points[i].sqDistToCenter * points[i].sqDistToCenter;
 			} else {
-				points[j].randomWeight = points[j].sqDistToCenter + points[j - 1].randomWeight;
+				points[i].randomWeight = (points[i].sqDistToCenter * points[i].sqDistToCenter) + points[i - 1].randomWeight;
 			}
 		}
-
 	}
 
 	function FirstCenter() {
@@ -86,7 +85,6 @@ const ProcessManager = (function () {
 		ReassignPoints();
 		DrawAll();
 		DOMManager.newCenterButton.removeAttribute('disabled');
-		previousStep = 0;
 		step = 1;
 
 		console.log('Centers', centers);
@@ -96,10 +94,11 @@ const ProcessManager = (function () {
 		stepName = 'New Center';
 		// random choose next center
 		const randChoice = Random.randFloatValue(0, points[points.length - 1].randomWeight);
+		// const randChoice = 0;
 
 		let i = 0;
 		while (i < points.length) {
-			if (randChoice < points[i].randomWeight) break;
+			if (randChoice <= points[i].randomWeight) break;
 			i++;
 		}
 		console.log('Chosen Points Index', i);
@@ -109,8 +108,7 @@ const ProcessManager = (function () {
 		ReassignPoints();
 		DrawAll();
 		DOMManager.newCenterButton.removeAttribute('disabled');
-		previousStep = 1;
-		step = 2;
+		step = 1;
 	}
 
 	function MoveCenters() {
@@ -137,7 +135,6 @@ const ProcessManager = (function () {
 
 		ReassignPoints();
 		DrawAll();
-		previousStep = 2;
 		step = 1;
 	}
 
@@ -188,7 +185,6 @@ const ProcessManager = (function () {
 		},
 
 		moveCenters() {
-			previousStep = 3;
 			step = 2;
 			this.nextStep();
 		},
