@@ -5,6 +5,9 @@ const ProcessManager = (function () {
 
 	const debugStates = true;
 
+	let pointsCount = 500;
+	let points = [];
+
 	return {
 		changeState(s) {
 			state = s;
@@ -13,16 +16,20 @@ const ProcessManager = (function () {
 		},
 
 		setup() {
+			background(28);
 
+			for (let i = 0; i < pointsCount; i++) {
+				points.push(new Points());
+				points[i].draw();
+			}
 		},
 
 		draw(dt) {
-			switch (state) {
-				default:
-					// do nothing
-					background(28);
-					break;
-			}
+			// switch (state) {
+			// 	default:
+			// 		// do nothing
+			// 		break;
+			// }
 		}
 	}
 })()
